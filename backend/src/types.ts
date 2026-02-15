@@ -70,3 +70,9 @@ export interface SearchResult {
   line: number | null;
 }
 
+// Результат data flow slice
+export interface DataFlowSlice {
+  nodes: Node[];
+  edges: Edge[];
+}
+

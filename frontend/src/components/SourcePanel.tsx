@@ -1,4 +1,3 @@
-import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-go';
 import 'prismjs/themes/prism.css';
@@ -6,9 +5,10 @@ import { useSource, useFunction } from '../hooks/useApi';
 
 interface SourcePanelProps {
   selectedNodeId: string | null;
+  highlightedLines?: Set<number>; // Номера строк для подсветки (1-based)
 }
 
-export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
+export function SourcePanel({ selectedNodeId, highlightedLines = new Set() }: SourcePanelProps) {
   const { data: functionData } = useFunction(selectedNodeId);
   const { data: sourceCode, isLoading } = useSource(
     functionData?.file || null
@@ -16,7 +16,7 @@ export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
 
   if (!selectedNodeId) {
     return (
-      <div className="h-64 bg-gray-50 border-t border-gray-200 flex items-center justify-center text-gray-400">
+      <div className="h-full bg-gray-50 flex items-center justify-center text-gray-400">
         Выберите функцию для просмотра исходного кода
       </div>
     );
@@ -24,7 +24,7 @@ export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
 
   if (isLoading) {
     return (
-      <div className="h-64 bg-gray-50 border-t border-gray-200 flex items-center justify-center">
+      <div className="h-full bg-gray-50 flex items-center justify-center">
         <div className="text-gray-500">Загрузка исходного кода...</div>
       </div>
     );
@@ -32,7 +32,7 @@ export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
 
   if (!sourceCode) {
     return (
-      <div className="h-64 bg-gray-50 border-t border-gray-200 flex items-center justify-center text-gray-400">
+      <div className="h-full bg-gray-50 flex items-center justify-center text-gray-400">
         Исходный код не найден
       </div>
     );
@@ -48,7 +48,7 @@ export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
   const startLineNumber = startLine + 1; // для отображения (1-based)
 
   return (
-    <div className="h-64 bg-gray-50 border-t border-gray-200 flex flex-col">
+    <div className="h-full bg-gray-50 flex flex-col">
       <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
         <div className="text-sm font-medium text-gray-700">
           {functionData?.file || 'Исходный код'}
@@ -69,19 +69,26 @@ export function SourcePanel({ selectedNodeId }: SourcePanelProps) {
             ))}
           </div>
           <div className="flex-1">
-            <Editor
-              value={visibleLines.join('\n')}
-              onValueChange={() => {}}
-              highlight={(code: string) => highlight(code, languages.go, 'go')}
-              padding={10}
-              style={{
-                fontFamily: '"Fira code", "Fira Mono", monospace',
-                fontSize: 14,
-                backgroundColor: '#fff',
-                minHeight: '100%'
-              }}
-              readOnly
-            />
+            <div className="p-2" style={{ fontFamily: '"Fira code", "Fira Mono", monospace', fontSize: 14 }}>
+              {visibleLines.map((line, idx) => {
+                const lineNumber = startLineNumber + idx;
+                const isHighlighted = highlightedLines.has(lineNumber);
+                return (
+                  <div
+                    key={idx}
+                    className={`px-2 py-0.5 ${isHighlighted ? 'bg-yellow-200' : ''}`}
+                    style={{ minHeight: '20px', lineHeight: '20px' }}
+                  >
+                    <pre
+                      className="m-0"
+                      dangerouslySetInnerHTML={{
+                        __html: highlight(line, languages.go, 'go')
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

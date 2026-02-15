@@ -69,3 +69,22 @@ export interface SourceCode {
   package: string | null;
 }
 
+// Переменная (parameter, local, result)
+export interface Variable extends Node {
+  // Наследует все поля Node
+}
+
+// DFG ребро
+export interface DFGEdge {
+  source: string;
+  target: string;
+  kind: string;
+  properties: string | null;
+}
+
+// Результат data flow slice
+export interface DataFlowSliceResult {
+  nodes: Node[];
+  edges: DFGEdge[];
+}
+

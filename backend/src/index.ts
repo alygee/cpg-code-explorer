@@ -6,6 +6,7 @@ import graphRouter from './routes/graph';
 import sourcesRouter from './routes/sources';
 import packagesRouter from './routes/packages';
 import statsRouter from './routes/stats';
+import dataflowRouter from './routes/dataflow';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,7 @@ app.use('/api/graph', graphRouter);
 app.use('/api/sources', sourcesRouter);
 app.use('/api/packages', packagesRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/dataflow', dataflowRouter);
 
 // Health check
 app.get('/health', (_req, res) => {

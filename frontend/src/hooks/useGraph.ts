@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNodesState, useEdgesState, Node, Edge } from '@xyflow/react';
 import dagre from 'dagre';
-import type { Node as CPGNode, FunctionNeighborhood } from '../types';
+import type { Node as CPGNode, FunctionNeighborhood, DataFlowSliceResult } from '../types';
 
 export interface GraphNode {
   id: string;
@@ -36,10 +36,13 @@ function getLayoutedElements(
 
   // Добавляем узлы в dagre граф
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { 
-      width: node.type === 'center' ? 200 : 180, 
-      height: node.type === 'center' ? 60 : 50 
-    });
+    let width = 180;
+    let height = 50;
+    if (node.type === 'center' || node.type === 'origin') {
+      width = 200;
+      height = 60;
+    }
+    dagreGraph.setNode(node.id, { width, height });
   });
 
   // Добавляем рёбра в dagre граф
@@ -53,8 +56,12 @@ function getLayoutedElements(
   // Обновляем позиции узлов
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    const width = node.type === 'center' ? 200 : 180;
-    const height = node.type === 'center' ? 60 : 50;
+    let width = 180;
+    let height = 50;
+    if (node.type === 'center' || node.type === 'origin') {
+      width = 200;
+      height = 60;
+    }
     return {
       ...node,
       position: {
@@ -145,6 +152,83 @@ export function useGraph() {
     [setNodes, setEdges]
   );
 
+  // Загрузка data flow slice в граф
+  const loadDataFlowSlice = useCallback(
+    (originNode: CPGNode, slice: DataFlowSliceResult) => {
+      const reactFlowNodes: Node[] = [];
+      const reactFlowEdges: Edge[] = [];
+
+      // Создаём map узлов для быстрого доступа
+      const nodeMap = new Map<string, CPGNode>();
+      slice.nodes.forEach(node => nodeMap.set(node.id, node));
+
+      // Центральный узел (origin - выбранная переменная)
+      reactFlowNodes.push({
+        id: originNode.id,
+        type: 'origin',
+        data: {
+          label: originNode.name,
+          kind: originNode.kind,
+          package: originNode.package,
+          file: originNode.file,
+          line: originNode.line,
+        },
+        position: { x: 0, y: 0 }, // Временная позиция
+      });
+
+      // Добавляем остальные узлы среза
+      slice.nodes.forEach(node => {
+        if (node.id === originNode.id) return; // Уже добавлен как origin
+
+        // Определяем тип узла: определение (def) или использование (use)
+        // Если есть входящее DFG ребро - это use, если только исходящее - def
+        const hasIncoming = slice.edges.some(e => e.target === node.id);
+        const hasOutgoing = slice.edges.some(e => e.source === node.id);
+        
+        let nodeType: 'def' | 'use' = 'use';
+        if (!hasIncoming && hasOutgoing) {
+          nodeType = 'def';
+        }
+
+        reactFlowNodes.push({
+          id: node.id,
+          type: nodeType,
+          data: {
+            label: node.name || node.kind,
+            kind: node.kind,
+            package: node.package,
+            file: node.file,
+            line: node.line,
+          },
+          position: { x: 0, y: 0 }, // Временная позиция
+        });
+      });
+
+      // Добавляем DFG рёбра
+      slice.edges.forEach((edge, index) => {
+        reactFlowEdges.push({
+          id: `dfg-edge-${index}`,
+          source: edge.source,
+          target: edge.target,
+          type: 'smoothstep',
+          animated: false,
+          style: { stroke: '#3b82f6', strokeWidth: 2 },
+          markerEnd: {
+            type: 'arrowclosed',
+            color: '#3b82f6',
+          },
+        });
+      });
+
+      // Применяем layout (TB - сверху вниз для data flow)
+      const layoutedNodes = getLayoutedElements(reactFlowNodes, reactFlowEdges, 'TB');
+      setNodes(layoutedNodes);
+      setEdges(reactFlowEdges);
+      setSelectedNodeId(originNode.id);
+    },
+    [setNodes, setEdges]
+  );
+
   // Очистить граф
   const clearGraph = useCallback(() => {
     setNodes([]);
@@ -166,6 +250,7 @@ export function useGraph() {
     selectedNodeId,
     setSelectedNodeId,
     loadNeighborhood,
+    loadDataFlowSlice,
     clearGraph,
   };
 }

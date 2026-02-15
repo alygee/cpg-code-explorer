@@ -8,7 +8,9 @@ import type {
   Node,
   Package,
   Stats,
-  SourceCode
+  SourceCode,
+  Variable,
+  DataFlowSliceResult
 } from '../types';
 
 // Поиск функций
@@ -87,6 +89,33 @@ export function useStats() {
   return useQuery<Stats>({
     queryKey: ['stats'],
     queryFn: () => apiClient.getStats()
+  });
+}
+
+// Получить переменные функции
+export function useVariables(functionId: string | null) {
+  return useQuery<Variable[]>({
+    queryKey: ['variables', functionId],
+    queryFn: () => apiClient.getVariables(functionId!),
+    enabled: functionId !== null
+  });
+}
+
+// Получить backward slice
+export function useBackwardSlice(nodeId: string | null) {
+  return useQuery<DataFlowSliceResult>({
+    queryKey: ['backward-slice', nodeId],
+    queryFn: () => apiClient.getBackwardSlice(nodeId!),
+    enabled: nodeId !== null
+  });
+}
+
+// Получить forward slice
+export function useForwardSlice(nodeId: string | null) {
+  return useQuery<DataFlowSliceResult>({
+    queryKey: ['forward-slice', nodeId],
+    queryFn: () => apiClient.getForwardSlice(nodeId!),
+    enabled: nodeId !== null
   });
 }
 

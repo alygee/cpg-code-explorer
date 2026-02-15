@@ -7,7 +7,9 @@ import type {
   Node,
   Package,
   Stats,
-  SourceCode
+  SourceCode,
+  Variable,
+  DataFlowSliceResult
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -80,6 +82,24 @@ export const apiClient = {
   // Получить статистику
   getStats: async (): Promise<Stats> => {
     const response = await api.get<Stats>('/stats');
+    return response.data;
+  },
+
+  // Получить переменные функции
+  getVariables: async (functionId: string): Promise<Variable[]> => {
+    const response = await api.get<Variable[]>(`/dataflow/${encodeURIComponent(functionId)}/variables`);
+    return response.data;
+  },
+
+  // Получить backward slice
+  getBackwardSlice: async (nodeId: string): Promise<DataFlowSliceResult> => {
+    const response = await api.get<DataFlowSliceResult>(`/dataflow/${encodeURIComponent(nodeId)}/backward-slice`);
+    return response.data;
+  },
+
+  // Получить forward slice
+  getForwardSlice: async (nodeId: string): Promise<DataFlowSliceResult> => {
+    const response = await api.get<DataFlowSliceResult>(`/dataflow/${encodeURIComponent(nodeId)}/forward-slice`);
     return response.data;
   }
 };

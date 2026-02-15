@@ -7,6 +7,8 @@ import { useFunction, useNeighborhood } from '../hooks/useApi';
 interface GraphViewProps {
   selectedFunctionId: string | null;
   onNodeSelect: (nodeId: string | null) => void;
+  mode?: 'call-graph' | 'data-flow';
+  dataFlowSlice?: { originNode: any; slice: any } | null;
 }
 
 // Кастомный компонент узла для caller
@@ -51,14 +53,59 @@ function CenterNode({ data }: { data: any }) {
   );
 }
 
+// Кастомный компонент узла для определения (def) в data flow
+function DefNode({ data }: { data: any }) {
+  return (
+    <div className="px-4 py-2 bg-purple-50 border-2 border-purple-400 rounded-lg text-center min-w-[120px]">
+      <Handle type="target" position={Position.Top} />
+      <div className="text-sm font-medium text-gray-800">{data.label}</div>
+      {data.kind && (
+        <div className="text-xs text-gray-500 mt-1">{data.kind}</div>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+// Кастомный компонент узла для использования (use) в data flow
+function UseNode({ data }: { data: any }) {
+  return (
+    <div className="px-4 py-2 bg-orange-50 border-2 border-orange-400 rounded-lg text-center min-w-[120px]">
+      <Handle type="target" position={Position.Top} />
+      <div className="text-sm font-medium text-gray-800">{data.label}</div>
+      {data.kind && (
+        <div className="text-xs text-gray-500 mt-1">{data.kind}</div>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+// Кастомный компонент узла для origin (выбранная переменная) в data flow
+function OriginNode({ data }: { data: any }) {
+  return (
+    <div className="px-5 py-3 bg-blue-50 border-3 border-blue-500 rounded-lg text-center min-w-[160px] shadow-md">
+      <Handle type="target" position={Position.Top} />
+      <div className="text-base font-bold text-gray-900">{data.label}</div>
+      {data.kind && (
+        <div className="text-xs text-gray-600 mt-1">{data.kind}</div>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
 // Типы узлов для React Flow
 const nodeTypes: NodeTypes = {
   caller: CallerNode,
   callee: CalleeNode,
   center: CenterNode,
+  def: DefNode,
+  use: UseNode,
+  origin: OriginNode,
 };
 
-export function GraphView({ selectedFunctionId, onNodeSelect }: GraphViewProps) {
+export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph', dataFlowSlice }: GraphViewProps) {
   const {
     nodes,
     edges,
@@ -67,20 +114,32 @@ export function GraphView({ selectedFunctionId, onNodeSelect }: GraphViewProps) 
     onNodeClick,
     selectedNodeId,
     loadNeighborhood,
+    loadDataFlowSlice,
     clearGraph,
   } = useGraph();
 
   const { data: functionData } = useFunction(selectedFunctionId);
   const { data: neighborhood, isLoading } = useNeighborhood(selectedFunctionId);
 
-  // Загрузка neighborhood при изменении выбранной функции
+  // Загрузка neighborhood при изменении выбранной функции (режим call-graph)
   useEffect(() => {
-    if (selectedFunctionId && functionData && neighborhood) {
-      loadNeighborhood(functionData, neighborhood);
-    } else if (!selectedFunctionId) {
+    if (mode === 'call-graph') {
+      if (selectedFunctionId && functionData && neighborhood) {
+        loadNeighborhood(functionData, neighborhood);
+      } else if (!selectedFunctionId) {
+        clearGraph();
+      }
+    }
+  }, [mode, selectedFunctionId, functionData, neighborhood, loadNeighborhood, clearGraph]);
+
+  // Загрузка data flow slice (режим data-flow)
+  useEffect(() => {
+    if (mode === 'data-flow' && dataFlowSlice) {
+      loadDataFlowSlice(dataFlowSlice.originNode, dataFlowSlice.slice);
+    } else if (mode === 'data-flow' && !dataFlowSlice) {
       clearGraph();
     }
-  }, [selectedFunctionId, functionData, neighborhood, loadNeighborhood, clearGraph]);
+  }, [mode, dataFlowSlice, loadDataFlowSlice, clearGraph]);
 
   // Передача выбранного узла наверх
   useEffect(() => {
