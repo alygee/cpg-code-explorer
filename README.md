@@ -25,9 +25,9 @@ Web application for exploring Go codebase through Code Property Graph (CPG) with
 - **Function Metrics**: Display complexity (cyclomatic complexity), fan-in, fan-out, LOC
 - **Resizable Sidebar**: Ability to change sidebar width to view long names
 
-![Code Explorer](code-explorer.jpg)
-![Data Flow](data-flow.jpg)
-![Packages](packages.jpg)
+![Code Explorer](code-explorer.JPG)
+![Data Flow](data-flow.JPG)
+![Packages](packages.JPG)
 
 ## Tech Stack
 
