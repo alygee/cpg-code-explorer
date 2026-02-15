@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, NodeTypes, Handle, Position } from '@xyflow/react';
+import type { Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useGraph } from '../hooks/useGraph';
 import { useFunction, useNeighborhood } from '../hooks/useApi';
@@ -7,11 +8,12 @@ import { useFunction, useNeighborhood } from '../hooks/useApi';
 interface GraphViewProps {
   selectedFunctionId: string | null;
   onNodeSelect: (nodeId: string | null) => void;
+  onNodeNavigate?: (nodeId: string) => void;
   mode?: 'call-graph' | 'data-flow';
   dataFlowSlice?: { originNode: any; slice: any } | null;
 }
 
-// Кастомный компонент узла для caller
+// Custom node component for caller
 function CallerNode({ data }: { data: any }) {
   return (
     <div className="px-4 py-2 bg-red-50 border-2 border-red-400 rounded-lg text-center min-w-[120px]">
@@ -25,7 +27,7 @@ function CallerNode({ data }: { data: any }) {
   );
 }
 
-// Кастомный компонент узла для callee
+// Custom node component for callee
 function CalleeNode({ data }: { data: any }) {
   return (
     <div className="px-4 py-2 bg-green-50 border-2 border-green-400 rounded-lg text-center min-w-[120px]">
@@ -39,7 +41,7 @@ function CalleeNode({ data }: { data: any }) {
   );
 }
 
-// Кастомный компонент узла для center
+// Custom node component for center
 function CenterNode({ data }: { data: any }) {
   return (
     <div className="px-5 py-3 bg-yellow-50 border-3 border-yellow-500 rounded-lg text-center min-w-[160px] shadow-md">
@@ -53,7 +55,7 @@ function CenterNode({ data }: { data: any }) {
   );
 }
 
-// Кастомный компонент узла для определения (def) в data flow
+// Custom node component for definition (def) in data flow
 function DefNode({ data }: { data: any }) {
   return (
     <div className="px-4 py-2 bg-purple-50 border-2 border-purple-400 rounded-lg text-center min-w-[120px]">
@@ -67,7 +69,7 @@ function DefNode({ data }: { data: any }) {
   );
 }
 
-// Кастомный компонент узла для использования (use) в data flow
+// Custom node component for use in data flow
 function UseNode({ data }: { data: any }) {
   return (
     <div className="px-4 py-2 bg-orange-50 border-2 border-orange-400 rounded-lg text-center min-w-[120px]">
@@ -81,7 +83,7 @@ function UseNode({ data }: { data: any }) {
   );
 }
 
-// Кастомный компонент узла для origin (выбранная переменная) в data flow
+// Custom node component for origin (selected variable) in data flow
 function OriginNode({ data }: { data: any }) {
   return (
     <div className="px-5 py-3 bg-blue-50 border-3 border-blue-500 rounded-lg text-center min-w-[160px] shadow-md">
@@ -95,7 +97,7 @@ function OriginNode({ data }: { data: any }) {
   );
 }
 
-// Типы узлов для React Flow
+// Node types for React Flow
 const nodeTypes: NodeTypes = {
   caller: CallerNode,
   callee: CalleeNode,
@@ -105,23 +107,32 @@ const nodeTypes: NodeTypes = {
   origin: OriginNode,
 };
 
-export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph', dataFlowSlice }: GraphViewProps) {
+export function GraphView({ selectedFunctionId, onNodeSelect, onNodeNavigate, mode = 'call-graph', dataFlowSlice }: GraphViewProps) {
   const {
     nodes,
     edges,
     onNodesChange,
     onEdgesChange,
     onNodeClick,
+    onNodeDoubleClick,
     selectedNodeId,
     loadNeighborhood,
     loadDataFlowSlice,
     clearGraph,
   } = useGraph();
 
+  // Double-click handler — navigate to function
+  const handleNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    onNodeDoubleClick(_event, node);
+    if (onNodeNavigate) {
+      onNodeNavigate(node.id);
+    }
+  }, [onNodeDoubleClick, onNodeNavigate]);
+
   const { data: functionData } = useFunction(selectedFunctionId);
   const { data: neighborhood, isLoading } = useNeighborhood(selectedFunctionId);
 
-  // Загрузка neighborhood при изменении выбранной функции (режим call-graph)
+  // Load neighborhood when selected function changes (call-graph mode)
   useEffect(() => {
     if (mode === 'call-graph') {
       if (selectedFunctionId && functionData && neighborhood) {
@@ -132,7 +143,7 @@ export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph
     }
   }, [mode, selectedFunctionId, functionData, neighborhood, loadNeighborhood, clearGraph]);
 
-  // Загрузка data flow slice (режим data-flow)
+  // Load data flow slice (data-flow mode)
   useEffect(() => {
     if (mode === 'data-flow' && dataFlowSlice) {
       loadDataFlowSlice(dataFlowSlice.originNode, dataFlowSlice.slice);
@@ -141,7 +152,7 @@ export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph
     }
   }, [mode, dataFlowSlice, loadDataFlowSlice, clearGraph]);
 
-  // Передача выбранного узла наверх
+  // Pass selected node up
   useEffect(() => {
     onNodeSelect(selectedNodeId);
   }, [selectedNodeId, onNodeSelect]);
@@ -150,15 +161,15 @@ export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph
     <div className="flex-1 relative bg-white" style={{ minHeight: '400px' }}>
       {isLoading && selectedFunctionId && (
         <div className="absolute top-4 left-4 z-10 bg-blue-500 text-white px-4 py-2 rounded shadow-lg">
-          Загрузка графа...
+          Loading graph...
         </div>
       )}
       {!selectedFunctionId && (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400 z-10">
           <div className="text-center">
             <div className="text-2xl mb-2">📊</div>
-            <div>Выберите функцию для отображения графа вызовов</div>
-            <div className="text-sm mt-2">Используйте поиск или выберите функцию из списка пакетов</div>
+            <div>Select a function to display call graph</div>
+            <div className="text-sm mt-2">Use search or select a function from package list</div>
           </div>
         </div>
       )}
@@ -168,6 +179,7 @@ export function GraphView({ selectedFunctionId, onNodeSelect, mode = 'call-graph
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={handleNodeDoubleClick}
         nodeTypes={nodeTypes}
         fitView
         minZoom={0.1}

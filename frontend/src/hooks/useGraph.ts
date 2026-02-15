@@ -19,7 +19,7 @@ export interface GraphEdge {
   kind: string;
 }
 
-// Функция для вычисления layout с помощью dagre
+// Function to calculate layout using dagre
 function getLayoutedElements(
   nodes: Node[],
   edges: Edge[],
@@ -34,7 +34,7 @@ function getLayoutedElements(
     ranksep: 100 
   });
 
-  // Добавляем узлы в dagre граф
+  // Add nodes to dagre graph
   nodes.forEach((node) => {
     let width = 180;
     let height = 50;
@@ -45,15 +45,15 @@ function getLayoutedElements(
     dagreGraph.setNode(node.id, { width, height });
   });
 
-  // Добавляем рёбра в dagre граф
+  // Add edges to dagre graph
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
   });
 
-  // Вычисляем layout
+  // Calculate layout
   dagre.layout(dagreGraph);
 
-  // Обновляем позиции узлов
+  // Update node positions
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     let width = 180;
@@ -77,13 +77,13 @@ export function useGraph() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  // Загрузка neighborhood в граф
+  // Load neighborhood into graph
   const loadNeighborhood = useCallback(
     (centerNode: CPGNode, neighborhood: FunctionNeighborhood) => {
       const reactFlowNodes: Node[] = [];
       const reactFlowEdges: Edge[] = [];
 
-      // Центральный узел
+      // Center node
       reactFlowNodes.push({
         id: centerNode.id,
         type: 'center',
@@ -94,10 +94,10 @@ export function useGraph() {
           file: centerNode.file,
           line: centerNode.line,
         },
-        position: { x: 0, y: 0 }, // Временная позиция, будет пересчитана
+        position: { x: 0, y: 0 }, // Temporary position, will be recalculated
       });
 
-      // Callers (слева)
+      // Callers (left)
       neighborhood.callers.forEach((caller) => {
         reactFlowNodes.push({
           id: caller.id,
@@ -109,7 +109,7 @@ export function useGraph() {
             file: caller.file,
             line: caller.line,
           },
-          position: { x: 0, y: 0 }, // Временная позиция
+          position: { x: 0, y: 0 }, // Temporary position
         });
         reactFlowEdges.push({
           id: `edge-${caller.id}-${centerNode.id}`,
@@ -120,7 +120,7 @@ export function useGraph() {
         });
       });
 
-      // Callees (справа)
+      // Callees (right)
       neighborhood.callees.forEach((callee) => {
         reactFlowNodes.push({
           id: callee.id,
@@ -132,7 +132,7 @@ export function useGraph() {
             file: callee.file,
             line: callee.line,
           },
-          position: { x: 0, y: 0 }, // Временная позиция
+          position: { x: 0, y: 0 }, // Temporary position
         });
         reactFlowEdges.push({
           id: `edge-${centerNode.id}-${callee.id}`,
@@ -143,7 +143,7 @@ export function useGraph() {
         });
       });
 
-      // Применяем layout
+      // Apply layout
       const layoutedNodes = getLayoutedElements(reactFlowNodes, reactFlowEdges, 'LR');
       setNodes(layoutedNodes);
       setEdges(reactFlowEdges);
@@ -152,17 +152,17 @@ export function useGraph() {
     [setNodes, setEdges]
   );
 
-  // Загрузка data flow slice в граф
+  // Load data flow slice into graph
   const loadDataFlowSlice = useCallback(
     (originNode: CPGNode, slice: DataFlowSliceResult) => {
       const reactFlowNodes: Node[] = [];
       const reactFlowEdges: Edge[] = [];
 
-      // Создаём map узлов для быстрого доступа
+      // Create node map for quick access
       const nodeMap = new Map<string, CPGNode>();
       slice.nodes.forEach(node => nodeMap.set(node.id, node));
 
-      // Центральный узел (origin - выбранная переменная)
+      // Center node (origin - selected variable)
       reactFlowNodes.push({
         id: originNode.id,
         type: 'origin',
@@ -173,15 +173,15 @@ export function useGraph() {
           file: originNode.file,
           line: originNode.line,
         },
-        position: { x: 0, y: 0 }, // Временная позиция
+        position: { x: 0, y: 0 }, // Temporary position
       });
 
-      // Добавляем остальные узлы среза
+      // Add remaining slice nodes
       slice.nodes.forEach(node => {
-        if (node.id === originNode.id) return; // Уже добавлен как origin
+        if (node.id === originNode.id) return; // Already added as origin
 
-        // Определяем тип узла: определение (def) или использование (use)
-        // Если есть входящее DFG ребро - это use, если только исходящее - def
+        // Determine node type: definition (def) or use
+        // If there's an incoming DFG edge - it's use, if only outgoing - def
         const hasIncoming = slice.edges.some(e => e.target === node.id);
         const hasOutgoing = slice.edges.some(e => e.source === node.id);
         
@@ -200,11 +200,11 @@ export function useGraph() {
             file: node.file,
             line: node.line,
           },
-          position: { x: 0, y: 0 }, // Временная позиция
+          position: { x: 0, y: 0 }, // Temporary position
         });
       });
 
-      // Добавляем DFG рёбра
+      // Add DFG edges
       slice.edges.forEach((edge, index) => {
         reactFlowEdges.push({
           id: `dfg-edge-${index}`,
@@ -220,7 +220,7 @@ export function useGraph() {
         });
       });
 
-      // Применяем layout (TB - сверху вниз для data flow)
+      // Apply layout (TB - top to bottom for data flow)
       const layoutedNodes = getLayoutedElements(reactFlowNodes, reactFlowEdges, 'TB');
       setNodes(layoutedNodes);
       setEdges(reactFlowEdges);
@@ -229,15 +229,20 @@ export function useGraph() {
     [setNodes, setEdges]
   );
 
-  // Очистить граф
+  // Clear graph
   const clearGraph = useCallback(() => {
     setNodes([]);
     setEdges([]);
     setSelectedNodeId(null);
   }, [setNodes, setEdges]);
 
-  // Обработчик клика по узлу
+  // Node click handler (select node to view code)
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, [setSelectedNodeId]);
+
+  // Node double-click handler (navigate to function)
+  const onNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
   }, [setSelectedNodeId]);
 
@@ -247,6 +252,7 @@ export function useGraph() {
     onNodesChange,
     onEdgesChange,
     onNodeClick,
+    onNodeDoubleClick,
     selectedNodeId,
     setSelectedNodeId,
     loadNeighborhood,

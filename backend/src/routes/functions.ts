@@ -5,7 +5,7 @@ import type Database from 'better-sqlite3';
 
 const router = Router();
 
-// Ленивая инициализация prepared statements
+// Lazy initialization of prepared statements
 let searchStmt: Database.Statement | null = null;
 let functionByIdStmt: Database.Statement | null = null;
 
@@ -39,7 +39,7 @@ function getFunctionByIdStmt(): Database.Statement {
 }
 
 /**
- * Поиск функций по имени
+ * Search functions by name
  * GET /api/functions/search?q=...&limit=50
  */
 router.get('/search', (req, res) => {
@@ -56,13 +56,13 @@ router.get('/search', (req, res) => {
     
     return res.json(results);
   } catch (error) {
-    console.error('Ошибка поиска функций:', error);
-    return res.status(500).json({ error: 'Ошибка при поиске функций' });
+    console.error('Error searching functions:', error);
+    return res.status(500).json({ error: 'Error searching functions' });
   }
 });
 
 /**
- * Получить детали функции по ID
+ * Get function details by ID
  * GET /api/functions/:id
  */
 router.get('/:id', (req, res) => {
@@ -71,13 +71,13 @@ router.get('/:id', (req, res) => {
     const func = getFunctionByIdStmt().get(functionId) as FunctionWithMetrics | undefined;
     
     if (!func) {
-      return res.status(404).json({ error: 'Функция не найдена' });
+      return res.status(404).json({ error: 'Function not found' });
     }
     
     return res.json(func);
   } catch (error) {
-    console.error('Ошибка получения функции:', error);
-    return res.status(500).json({ error: 'Ошибка при получении функции' });
+    console.error('Error fetching function:', error);
+    return res.status(500).json({ error: 'Error fetching function' });
   }
 });
 

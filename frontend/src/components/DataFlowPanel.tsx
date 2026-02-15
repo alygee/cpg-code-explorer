@@ -15,7 +15,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
   if (!functionId) {
     return (
       <div className="w-full bg-gray-50 border-r border-gray-200 p-4 text-gray-400 text-sm">
-        Выберите функцию для просмотра переменных
+        Select a function to view variables
       </div>
     );
   }
@@ -23,7 +23,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
   if (isLoading) {
     return (
       <div className="w-full bg-gray-50 border-r border-gray-200 p-4">
-        <div className="text-gray-500">Загрузка переменных...</div>
+        <div className="text-gray-500">Loading variables...</div>
       </div>
     );
   }
@@ -31,7 +31,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
   if (!variables || variables.length === 0) {
     return (
       <div className="w-full bg-gray-50 border-r border-gray-200 p-4 text-gray-400 text-sm">
-        Переменные не найдены
+        Variables not found
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
     }
   };
 
-  // Группируем переменные по типу
+  // Group variables by type
   const parameters = variables.filter(v => v.kind === 'parameter');
   const locals = variables.filter(v => v.kind === 'local');
   const results = variables.filter(v => v.kind === 'result');
@@ -56,7 +56,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
   return (
     <div className="w-full bg-gray-50 border-r border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Направление среза</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Slice Direction</h3>
         <div className="flex gap-2">
           <button
             onClick={() => handleDirectionChange('backward')}
@@ -66,7 +66,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            Назад
+            Backward
           </button>
           <button
             onClick={() => handleDirectionChange('forward')}
@@ -76,20 +76,20 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            Вперёд
+            Forward
           </button>
         </div>
         <div className="mt-2 text-xs text-gray-500">
           {direction === 'backward' 
-            ? 'Найти все определения, влияющие на переменную'
-            : 'Найти все использования переменной'}
+            ? 'Find all definitions influencing the variable'
+            : 'Find all uses of the variable'}
         </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
         {parameters.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Параметры</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Parameters</h4>
             <div className="space-y-1">
               {parameters.map(variable => (
                 <button
@@ -113,7 +113,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
 
         {locals.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Локальные переменные</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Local Variables</h4>
             <div className="space-y-1">
               {locals.map(variable => (
                 <button
@@ -137,7 +137,7 @@ export function DataFlowPanel({ functionId, onSelectVariable }: DataFlowPanelPro
 
         {results.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Возвращаемые значения</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Return Values</h4>
             <div className="space-y-1">
               {results.map(variable => (
                 <button

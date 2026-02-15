@@ -5,7 +5,7 @@ import { Stats } from '../types';
 const router = Router();
 
 /**
- * Получить общую статистику
+ * Get overall statistics
  * GET /api/stats
  */
 router.get('/', (_req, res) => {
@@ -21,13 +21,13 @@ router.get('/', (_req, res) => {
     const stats = queryOne<Stats>(sql);
     
     if (!stats) {
-      return res.status(500).json({ error: 'Не удалось получить статистику' });
+      return res.status(500).json({ error: 'Failed to fetch statistics' });
     }
     
     return res.json(stats);
   } catch (error) {
-    console.error('Ошибка получения статистики:', error);
-    return res.status(500).json({ error: 'Ошибка при получении статистики' });
+    console.error('Error fetching statistics:', error);
+    return res.status(500).json({ error: 'Error fetching statistics' });
   }
 });
 

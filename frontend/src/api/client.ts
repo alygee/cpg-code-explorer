@@ -9,7 +9,10 @@ import type {
   Stats,
   SourceCode,
   Variable,
-  DataFlowSliceResult
+  DataFlowSliceResult,
+  PackageDependency,
+  PackageTreemap,
+  FunctionDetail
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -21,9 +24,9 @@ const api = axios.create({
   }
 });
 
-// Функции API
+// API functions
 export const apiClient = {
-  // Поиск функций
+  // Search functions
   searchFunctions: async (query: string, limit = 50): Promise<SearchResult[]> => {
     const response = await api.get<SearchResult[]>('/functions/search', {
       params: { q: query, limit }
@@ -31,19 +34,19 @@ export const apiClient = {
     return response.data;
   },
 
-  // Получить функцию по ID
+  // Get function by ID
   getFunction: async (id: string): Promise<FunctionWithMetrics> => {
     const response = await api.get<FunctionWithMetrics>(`/functions/${encodeURIComponent(id)}`);
     return response.data;
   },
 
-  // Получить neighborhood функции
+  // Get function neighborhood
   getNeighborhood: async (id: string): Promise<FunctionNeighborhood> => {
     const response = await api.get<FunctionNeighborhood>(`/graph/${encodeURIComponent(id)}/neighborhood`);
     return response.data;
   },
 
-  // Получить call chain
+  // Get call chain
   getCallChain: async (id: string, depth = 5): Promise<CallChainNode[]> => {
     const response = await api.get<CallChainNode[]>(`/graph/${encodeURIComponent(id)}/call-chain`, {
       params: { depth }
@@ -51,7 +54,7 @@ export const apiClient = {
     return response.data;
   },
 
-  // Получить callers
+  // Get callers
   getCallers: async (id: string, depth = 3): Promise<Node[]> => {
     const response = await api.get<Node[]>(`/graph/${encodeURIComponent(id)}/callers`, {
       params: { depth }
@@ -59,47 +62,68 @@ export const apiClient = {
     return response.data;
   },
 
-  // Получить исходный код
+  // Get source code
   getSource: async (file: string): Promise<SourceCode> => {
     const encodedFile = encodeURIComponent(file);
     const response = await api.get<SourceCode>(`/sources/${encodedFile}`);
     return response.data;
   },
 
-  // Получить список пакетов
+  // Get package list
   getPackages: async (): Promise<Package[]> => {
     const response = await api.get<Package[]>('/packages');
     return response.data;
   },
 
-  // Получить функции пакета
+  // Get package functions
   getPackageFunctions: async (packageName: string): Promise<Node[]> => {
     const encodedPackage = encodeURIComponent(packageName);
     const response = await api.get<Node[]>(`/packages/${encodedPackage}/functions`);
     return response.data;
   },
 
-  // Получить статистику
+  // Get statistics
   getStats: async (): Promise<Stats> => {
     const response = await api.get<Stats>('/stats');
     return response.data;
   },
 
-  // Получить переменные функции
+  // Get function variables
   getVariables: async (functionId: string): Promise<Variable[]> => {
     const response = await api.get<Variable[]>(`/dataflow/${encodeURIComponent(functionId)}/variables`);
     return response.data;
   },
 
-  // Получить backward slice
+  // Get backward slice
   getBackwardSlice: async (nodeId: string): Promise<DataFlowSliceResult> => {
     const response = await api.get<DataFlowSliceResult>(`/dataflow/${encodeURIComponent(nodeId)}/backward-slice`);
     return response.data;
   },
 
-  // Получить forward slice
+  // Get forward slice
   getForwardSlice: async (nodeId: string): Promise<DataFlowSliceResult> => {
     const response = await api.get<DataFlowSliceResult>(`/dataflow/${encodeURIComponent(nodeId)}/forward-slice`);
+    return response.data;
+  },
+
+  // Get package dependency graph
+  getPackageGraph: async (limit = 200, minWeight = 3): Promise<PackageDependency[]> => {
+    const response = await api.get<PackageDependency[]>('/packages/graph', {
+      params: { limit, minWeight }
+    });
+    return response.data;
+  },
+
+  // Get package metrics for treemap
+  getPackageTreemap: async (): Promise<PackageTreemap[]> => {
+    const response = await api.get<PackageTreemap[]>('/packages/treemap');
+    return response.data;
+  },
+
+  // Get package function details
+  getPackageDetails: async (packageName: string): Promise<FunctionDetail[]> => {
+    const encodedPackage = encodeURIComponent(packageName);
+    const response = await api.get<FunctionDetail[]>(`/packages/${encodedPackage}/details`);
     return response.data;
   }
 };

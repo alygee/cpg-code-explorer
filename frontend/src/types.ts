@@ -1,4 +1,4 @@
-// Типы для узлов графа
+// Types for graph nodes
 export interface Node {
   id: string;
   kind: string;
@@ -13,7 +13,7 @@ export interface Node {
   properties: string | null;
 }
 
-// Функция с метриками
+// Function with metrics
 export interface FunctionWithMetrics extends Node {
   cyclomatic_complexity: number | null;
   fan_in: number | null;
@@ -21,7 +21,7 @@ export interface FunctionWithMetrics extends Node {
   loc: number | null;
 }
 
-// Neighborhood функции
+// Function neighborhood
 export interface FunctionNeighborhood {
   callers: Node[];
   callees: Node[];
@@ -35,7 +35,7 @@ export interface CallChainNode {
   depth: number;
 }
 
-// Статистика
+// Statistics
 export interface Stats {
   total_nodes: number;
   total_edges: number;
@@ -43,7 +43,7 @@ export interface Stats {
   total_packages: number;
 }
 
-// Пакет
+// Package
 export interface Package {
   package: string;
   files: number;
@@ -52,7 +52,7 @@ export interface Package {
   loc: number;
 }
 
-// Результат поиска
+// Search result
 export interface SearchResult {
   id: string;
   name: string;
@@ -62,19 +62,19 @@ export interface SearchResult {
   line: number | null;
 }
 
-// Исходный код
+// Source code
 export interface SourceCode {
   file: string;
   content: string;
   package: string | null;
 }
 
-// Переменная (parameter, local, result)
+// Variable (parameter, local, result)
 export interface Variable extends Node {
-  // Наследует все поля Node
+  // Inherits all Node fields
 }
 
-// DFG ребро
+// DFG edge
 export interface DFGEdge {
   source: string;
   target: string;
@@ -82,9 +82,52 @@ export interface DFGEdge {
   properties: string | null;
 }
 
-// Результат data flow slice
+// Data flow slice result
 export interface DataFlowSliceResult {
   nodes: Node[];
   edges: DFGEdge[];
+}
+
+// Package dependency
+export interface PackageDependency {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+// Package metrics for treemap
+export interface PackageTreemap {
+  package: string;
+  file_count: number;
+  function_count: number;
+  total_loc: number;
+  total_complexity: number;
+  avg_complexity: number;
+  max_complexity: number;
+  type_count: number;
+  interface_count: number;
+}
+
+// Function details from dashboard_function_detail
+export interface FunctionDetail {
+  function_id: string;
+  name: string;
+  package: string | null;
+  file: string | null;
+  line: number | null;
+  end_line: number | null;
+  signature: string | null;
+  complexity: number;
+  loc: number;
+  fan_in: number;
+  fan_out: number;
+  num_params: number;
+  num_locals: number;
+  num_calls: number;
+  num_branches: number;
+  num_returns: number;
+  finding_count: number;
+  callers: string | null;
+  callees: string | null;
 }
 

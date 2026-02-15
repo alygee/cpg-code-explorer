@@ -1,104 +1,108 @@
 # CPG Code Explorer
 
-Веб-приложение для исследования Go-кодовой базы через Code Property Graph (CPG) с фокусом на Call Graph Explorer.
+Web application for exploring Go codebase through Code Property Graph (CPG) with focus on Call Graph Explorer.
 
-## Возможности
+## Features
 
-### Режимы работы
+### Modes
 
-- **Call Graph Mode**: Интерактивная визуализация графа вызовов функций
-  - Просмотр callers (кто вызывает функцию) и callees (кого вызывает функция)
-  - Транзитивные цепочки вызовов
-  - Навигация по графу через клики по узлам
+- **Call Graph Mode**: Interactive visualization of function call graphs
+  - View callers (who calls the function) and callees (who the function calls)
+  - Transitive call chains
+  - Graph navigation through node clicks
 
-- **Data Flow Mode**: Анализ потока данных через переменные
-  - Просмотр переменных функции (parameters, locals, return values)
-  - Backward slice: отслеживание источников данных (где определяется значение)
-  - Forward slice: отслеживание использований данных (где используется значение)
-  - Подсветка соответствующих строк в исходном коде
+- **Data Flow Mode**: Data flow analysis through variables
+  - View function variables (parameters, locals, return values)
+  - Backward slice: track data sources (where value is defined)
+  - Forward slice: track data usage (where value is used)
+  - Highlight corresponding lines in source code
 
-### Основные функции
+### Main Features
 
-- **Поиск функций**: Быстрый поиск по имени функции с debouncing
-- **Навигация по пакетам**: Аккордеон-навигация с inline-раскрытием функций под выбранным пакетом
-- **Просмотр исходного кода**: Отображение исходного кода с подсветкой синтаксиса Go и выделением строк из data flow slice
-- **Метрики функций**: Отображение сложности (cyclomatic complexity), fan-in, fan-out, LOC
-- **Resizable Sidebar**: Возможность изменять ширину sidebar для просмотра длинных названий
+- **Function Search**: Fast function name search with debouncing
+- **Package Navigation**: Accordion navigation with inline function expansion under selected package
+- **Source Code View**: Display source code with Go syntax highlighting and highlighting of lines from data flow slice
+- **Function Metrics**: Display complexity (cyclomatic complexity), fan-in, fan-out, LOC
+- **Resizable Sidebar**: Ability to change sidebar width to view long names
 
-## Технологический стек
+![Code Explorer](code-explorer.jpg)
+![Data Flow](data-flow.jpg)
+![Packages](packages.jpg)
+
+## Tech Stack
 
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Node.js + Express + TypeScript
-- **База данных**: SQLite (better-sqlite3)
-- **Визуализация графа**: @xyflow/react (React Flow) + dagre для layout
-- **Стили**: Tailwind CSS
+- **Database**: SQLite (better-sqlite3)
+- **Graph Visualization**: @xyflow/react (React Flow) + dagre for layout
+- **Styling**: Tailwind CSS
 
-## Требования
+## Requirements
 
-- Docker и Docker Compose
-- База данных CPG (см. [SETUP_DB.md](./SETUP_DB.md))
+- Docker and Docker Compose
+- CPG database (see [SETUP_DB.md](./SETUP_DB.md))
 
-> 📖 **Подробная инструкция по Docker**: См. [DOCKER.md](./DOCKER.md) для детальных инструкций по запуску и решению проблем
+> 📖 **Detailed Docker instructions**: See [DOCKER.md](./DOCKER.md) for detailed setup and troubleshooting instructions
 
-## Быстрый старт
+## Quick Start
 
-### 1. Подготовка базы данных
+### 1. Database Setup
 
-Следуйте инструкциям в [SETUP_DB.md](./SETUP_DB.md) для генерации базы данных CPG.
+Follow instructions in [SETUP_DB.md](./SETUP_DB.md) to generate the CPG database.
 
-После генерации скопируйте файл `cpg.db` в папку `data/`:
+After generation, copy the `cpg.db` file to the `data/` folder:
 
 ```bash
 mkdir -p data
 cp ../cpg-test-release/cpg.db data/cpg.db
 ```
 
-### 2. Запуск через Docker Compose
+### 2. Running with Docker Compose
 
-**Важно:** Убедитесь, что файл `data/cpg.db` существует перед запуском!
+**Important:** Make sure the `data/cpg.db` file exists before starting!
 
 ```bash
-# Проверка наличия базы данных
+# Check database file exists
 ls -lh data/cpg.db
 
-# Запуск в фоновом режиме
+# Run in background
 docker compose up -d
 
-# Или запуск с выводом логов
+# Or run with logs
 docker compose up
 ```
 
-Приложение будет доступно по адресам:
+The application will be available at:
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
 - **Health check**: http://localhost:3001/health
 
-#### Полезные команды Docker Compose
+#### Useful Docker Compose Commands
 
 ```bash
-# Остановить контейнеры
+# Stop containers
 docker compose down
 
-# Пересобрать образы (после изменений в коде)
+# Rebuild images (after code changes)
 docker compose up --build
 
-# Просмотр логов
+# View logs
 docker compose logs -f
 
-# Просмотр логов только backend
+# View backend logs only
 docker compose logs -f backend
 
-# Просмотр логов только frontend
+# View frontend logs only
 docker compose logs -f frontend
 
-# Остановить и удалить контейнеры, volumes и сети
+# Stop and remove containers, volumes and networks
 docker compose down -v
 
-# Проверить статус контейнеров
+# Check container status
 docker compose ps
 ```
 
-## Разработка
+## Development
 
 ### Backend
 
@@ -108,7 +112,7 @@ npm install
 npm run dev
 ```
 
-Backend запустится на порту 3001.
+Backend will run on port 3001.
 
 ### Frontend
 
@@ -118,83 +122,82 @@ npm install
 npm run dev
 ```
 
-Frontend запустится на порту 3000.
+Frontend will run on port 3000.
 
-## Использование
+## Usage
 
 ### Call Graph Mode
 
-1. **Поиск функции**: Введите имя функции в поисковую строку или выберите из списка пакетов
-2. **Выбор функции**: Кликните на функцию в результатах поиска или в списке пакетов
-3. **Просмотр графа**: Граф вызовов отобразится в центральной панели
-   - Жёлтый узел — выбранная функция
-   - Красные узлы — функции, которые вызывают выбранную (callers)
-   - Зелёные узлы — функции, которые вызываются выбранной (callees)
-4. **Навигация**: Кликните на любой узел графа, чтобы перейти к другой функции
-5. **Исходный код**: В правой панели отображается исходный код выбранной функции
+1. **Search function**: Enter function name in search bar or select from package list
+2. **Select function**: Click on function in search results or package list
+3. **View graph**: Call graph will display in center panel
+   - Yellow node — selected function
+   - Red nodes — functions that call the selected one (callers)
+   - Green nodes — functions called by the selected one (callees)
+4. **Navigation**: Click on any graph node to navigate to another function
+5. **Source code**: Source code of selected function displays in right panel
 
 ### Data Flow Mode
 
-1. **Переключение режима**: Выберите вкладку "Data Flow" в верхней части интерфейса
-2. **Выбор функции**: Выберите функцию из поиска или списка пакетов
-3. **Выбор переменной**: В левой панели выберите переменную (parameter, local или return value)
-4. **Выбор направления**: Нажмите "Backward" для отслеживания источников или "Forward" для отслеживания использований
-5. **Просмотр slice**: Граф data flow отобразится в центральной панели
-   - Синий узел — выбранная переменная (origin)
-   - Фиолетовые узлы — определения (def)
-   - Оранжевые узлы — использования (use)
-6. **Подсветка кода**: Соответствующие строки в исходном коде будут подсвечены
+1. **Switch mode**: Select "Data Flow" tab at the top of the interface
+2. **Select function**: Choose function from search or package list
+3. **Select variable**: In left panel, select a variable (parameter, local or return value)
+4. **Select direction**: Click "Backward" to track sources or "Forward" to track usages
+5. **View slice**: Data flow graph will display in center panel
+   - Blue node — selected variable (origin)
+   - Purple nodes — definitions (def)
+   - Orange nodes — uses
+6. **Code highlighting**: Corresponding lines in source code will be highlighted
 
-## Архитектура
+## Architecture
 
-> 📚 **Подробное описание архитектуры**: См. [ARCHITECTURE.md](./ARCHITECTURE.md) для детального разбора структуры проекта, принятых решений и обоснований
+> 📚 **Detailed architecture description**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed project structure, decisions and rationale
 
 ### Backend API
 
-- `GET /api/functions/search?q=...&limit=50` - Поиск функций
-- `GET /api/functions/:id` - Детали функции
-- `GET /api/graph/:id/neighborhood` - Callers и callees функции
-- `GET /api/graph/:id/call-chain?depth=5` - Транзитивная цепочка вызовов
-- `GET /api/graph/:id/callers?depth=3` - Все callers функции
-- `GET /api/dataflow/:functionId/variables` - Переменные функции
-- `GET /api/dataflow/:nodeId/backward-slice` - Backward slice (определения)
-- `GET /api/dataflow/:nodeId/forward-slice` - Forward slice (использования)
-- `GET /api/sources/:file` - Исходный код файла
-- `GET /api/packages` - Список пакетов
-- `GET /api/packages/:name/functions` - Функции пакета
-- `GET /api/stats` - Общая статистика
+- `GET /api/functions/search?q=...&limit=50` - Search functions
+- `GET /api/functions/:id` - Function details
+- `GET /api/graph/:id/neighborhood` - Function callers and callees
+- `GET /api/graph/:id/call-chain?depth=5` - Transitive call chain
+- `GET /api/graph/:id/callers?depth=3` - All function callers
+- `GET /api/dataflow/:functionId/variables` - Function variables
+- `GET /api/dataflow/:nodeId/backward-slice` - Backward slice (definitions)
+- `GET /api/dataflow/:nodeId/forward-slice` - Forward slice (usages)
+- `GET /api/sources/:file` - File source code
+- `GET /api/packages` - Package list
+- `GET /api/packages/:name/functions` - Package functions
+- `GET /api/stats` - Overall statistics
 
-### Frontend компоненты
+### Frontend Components
 
-- `SearchBar` - Поиск функций с debouncing
-- `Sidebar` - Аккордеон-навигация по пакетам с inline-раскрытием функций (resizable)
-- `GraphView` - Визуализация графа вызовов или data flow (React Flow с кастомными узлами)
-- `SourcePanel` - Просмотр исходного кода с подсветкой синтаксиса и выделением строк из data flow slice
-- `FunctionDetails` - Детали функции с метриками (complexity, fan-in, fan-out, LOC)
-- `DataFlowPanel` - Выбор переменной функции и направления slice (backward/forward)
+- `SearchBar` - Function search with debouncing
+- `Sidebar` - Accordion package navigation with inline function expansion (resizable)
+- `GraphView` - Call graph or data flow visualization (React Flow with custom nodes)
+- `SourcePanel` - Source code view with syntax highlighting and highlighting of lines from data flow slice
+- `FunctionDetails` - Function details with metrics (complexity, fan-in, fan-out, LOC)
+- `DataFlowPanel` - Function variable selection and slice direction (backward/forward)
 
-## Ключевые решения
+## Key Decisions
 
-1. **React Flow (@xyflow/react)**: Современная библиотека для визуализации графов с поддержкой кастомных узлов, zoom, pan, minimap
-2. **Dagre layout**: Иерархический layout для графов (сверху вниз или слева направо)
-3. **better-sqlite3**: Синхронный доступ, быстрый для read-only операций
-4. **TanStack Query**: Кэширование API-запросов на клиенте (staleTime: 5 минут)
-5. **Ограничение глубины**: Все рекурсивные запросы ограничены (depth 5-20 в зависимости от типа запроса)
-6. **Prepared statements**: Кэширование SQL-запросов на бэкенде для часто используемых операций
-7. **Аккордеон-навигация**: Inline-раскрытие функций под пакетом для улучшения UX
-8. **URL encoding**: Корректная обработка ID с специальными символами (/, :, ::)
-9. **Parameterized queries**: Защита от SQL injection для всех запросов с динамическими параметрами
+1. **React Flow (@xyflow/react)**: Modern library for graph visualization with support for custom nodes, zoom, pan, minimap
+2. **Dagre layout**: Hierarchical layout for graphs (top to bottom or left to right)
+3. **better-sqlite3**: Synchronous access, fast for read-only operations
+4. **TanStack Query**: Client-side API request caching (staleTime: 5 minutes)
+5. **Depth limiting**: All recursive queries are limited (depth 5-20 depending on query type)
+6. **Prepared statements**: SQL query caching on backend for frequently used operations
+7. **Accordion navigation**: Inline function expansion under package for improved UX
+8. **URL encoding**: Correct handling of IDs with special characters (/, :, ::)
+9. **Parameterized queries**: SQL injection protection for all queries with dynamic parameters
 
-## Производительность
+## Performance
 
-Приложение оптимизировано для работы с большой базой данных (~900 MB, 555,000 узлов, 1,500,000 рёбер):
+The application is optimized for working with large database (~900 MB, 555,000 nodes, 1,500,000 edges):
 
-- Prepared statements для часто используемых запросов
-- Кэширование на клиенте через TanStack Query
-- Ленивая загрузка данных (только при необходимости)
-- Ограничение размера подграфов (10-60 узлов)
+- Prepared statements for frequently used queries
+- Client-side caching via TanStack Query
+- Lazy data loading (only when needed)
+- Subgraph size limiting (10-60 nodes)
 
-## Лицензия
+## License
 
 ISC
-

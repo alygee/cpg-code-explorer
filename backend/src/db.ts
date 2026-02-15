@@ -1,31 +1,31 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-// Путь к базе данных
+// Database path
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../data/cpg.db');
 
 let db: Database.Database | null = null;
 
 /**
- * Получить подключение к базе данных (singleton)
+ * Get database connection (singleton)
  */
 export function getDB(): Database.Database {
   if (db === null) {
-    console.log(`Подключение к базе данных: ${DB_PATH}`);
+    console.log(`Connecting to database: ${DB_PATH}`);
     db = new Database(DB_PATH, { readonly: true });
     
-    // Оптимизация для read-only доступа
+    // Optimization for read-only access
     db.pragma('journal_mode = WAL');
-    db.pragma('cache_size = -64000'); // 64MB кэш
+    db.pragma('cache_size = -64000'); // 64MB cache
     db.pragma('mmap_size = 268435456'); // 256MB mmap
     
-    console.log('База данных подключена успешно');
+    console.log('Database connected successfully');
   }
   return db;
 }
 
 /**
- * Выполнить SQL запрос с параметрами
+ * Execute SQL query with parameters
  */
 export function query<T = unknown>(sql: string, params: unknown[] = []): T[] {
   const database = getDB();
@@ -34,7 +34,7 @@ export function query<T = unknown>(sql: string, params: unknown[] = []): T[] {
 }
 
 /**
- * Выполнить SQL запрос и вернуть одну строку
+ * Execute SQL query and return one row
  */
 export function queryOne<T = unknown>(sql: string, params: unknown[] = []): T | null {
   const database = getDB();
@@ -44,7 +44,7 @@ export function queryOne<T = unknown>(sql: string, params: unknown[] = []): T | 
 }
 
 /**
- * Получить prepared statement для переиспользования
+ * Get prepared statement for reuse
  */
 export function prepare(sql: string): Database.Statement {
   const database = getDB();
@@ -52,13 +52,13 @@ export function prepare(sql: string): Database.Statement {
 }
 
 /**
- * Закрыть подключение к базе данных
+ * Close database connection
  */
 export function closeDB(): void {
   if (db !== null) {
     db.close();
     db = null;
-    console.log('Подключение к базе данных закрыто');
+    console.log('Database connection closed');
   }
 }
 

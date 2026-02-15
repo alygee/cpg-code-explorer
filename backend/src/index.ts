@@ -15,12 +15,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Проверка подключения к БД при старте
+// Check database connection on startup
 try {
   getDB();
-  console.log('✓ База данных подключена');
+  console.log('✓ Database connected');
 } catch (error) {
-  console.error('✗ Ошибка подключения к базе данных:', error);
+  console.error('✗ Database connection error:', error);
   process.exit(1);
 }
 
@@ -37,14 +37,14 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Обработка ошибок
+// Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Ошибка сервера:', err);
-  res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {
-  console.log(`✓ Сервер запущен на порту ${PORT}`);
-  console.log(`✓ API доступен по адресу http://localhost:${PORT}/api`);
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ API available at http://localhost:${PORT}/api`);
 });
 

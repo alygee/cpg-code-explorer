@@ -5,7 +5,7 @@ import type Database from 'better-sqlite3';
 
 const router = Router();
 
-// Ленивая инициализация prepared statements
+// Lazy initialization of prepared statements
 let neighborhoodStmt: Database.Statement | null = null;
 
 function getNeighborhoodStmt(): Database.Statement {
@@ -25,7 +25,7 @@ function getNeighborhoodStmt(): Database.Statement {
 }
 
 /**
- * Получить neighborhood функции (callers и callees)
+ * Get function neighborhood (callers and callees)
  * GET /api/graph/:id/neighborhood
  */
 router.get('/:id/neighborhood', (req, res) => {
@@ -71,13 +71,13 @@ router.get('/:id/neighborhood', (req, res) => {
     const neighborhood: FunctionNeighborhood = { callers, callees };
     res.json(neighborhood);
   } catch (error) {
-    console.error('Ошибка получения neighborhood:', error);
-    res.status(500).json({ error: 'Ошибка при получении neighborhood' });
+    console.error('Error fetching neighborhood:', error);
+    res.status(500).json({ error: 'Error fetching neighborhood' });
   }
 });
 
 /**
- * Получить транзитивную цепочку вызовов
+ * Get transitive call chain
  * GET /api/graph/:id/call-chain?depth=5
  */
 router.get('/:id/call-chain', (req, res) => {
@@ -103,13 +103,13 @@ router.get('/:id/call-chain', (req, res) => {
     const results = query<CallChainNode>(sql, [functionId, functionId, depth]);
     res.json(results);
   } catch (error) {
-    console.error('Ошибка получения call chain:', error);
-    res.status(500).json({ error: 'Ошибка при получении call chain' });
+    console.error('Error fetching call chain:', error);
+    res.status(500).json({ error: 'Error fetching call chain' });
   }
 });
 
 /**
- * Получить всех callers функции (транзитивно)
+ * Get all callers of a function (transitively)
  * GET /api/graph/:id/callers?depth=3
  */
 router.get('/:id/callers', (req, res) => {
@@ -134,8 +134,8 @@ router.get('/:id/callers', (req, res) => {
     const results = query<Node>(sql, [functionId, depth]);
     res.json(results);
   } catch (error) {
-    console.error('Ошибка получения callers:', error);
-    res.status(500).json({ error: 'Ошибка при получении callers' });
+    console.error('Error fetching callers:', error);
+    res.status(500).json({ error: 'Error fetching callers' });
   }
 });
 

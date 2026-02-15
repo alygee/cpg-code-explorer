@@ -5,7 +5,7 @@ import { useSource, useFunction } from '../hooks/useApi';
 
 interface SourcePanelProps {
   selectedNodeId: string | null;
-  highlightedLines?: Set<number>; // Номера строк для подсветки (1-based)
+  highlightedLines?: Set<number>; // Line numbers to highlight (1-based)
 }
 
 export function SourcePanel({ selectedNodeId, highlightedLines = new Set() }: SourcePanelProps) {
@@ -17,7 +17,7 @@ export function SourcePanel({ selectedNodeId, highlightedLines = new Set() }: So
   if (!selectedNodeId) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center text-gray-400">
-        Выберите функцию для просмотра исходного кода
+        Select a function to view source code
       </div>
     );
   }
@@ -25,7 +25,7 @@ export function SourcePanel({ selectedNodeId, highlightedLines = new Set() }: So
   if (isLoading) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Загрузка исходного кода...</div>
+        <div className="text-gray-500">Loading source code...</div>
       </div>
     );
   }
@@ -33,29 +33,29 @@ export function SourcePanel({ selectedNodeId, highlightedLines = new Set() }: So
   if (!sourceCode) {
     return (
       <div className="h-full bg-gray-50 flex items-center justify-center text-gray-400">
-        Исходный код не найден
+        Source code not found
       </div>
     );
   }
 
-  // Подсветка строки с функцией
-  // functionLine из SQL - 1-based, slice - 0-based
+  // Highlight function line
+  // functionLine from SQL - 1-based, slice - 0-based
   const lines = sourceCode.content.split('\n');
   const functionLine = functionData?.line || 1;
-  const startLine = Math.max(0, functionLine - 1 - 10); // конвертируем 1-based в 0-based
+  const startLine = Math.max(0, functionLine - 1 - 10); // convert 1-based to 0-based
   const endLine = Math.min(lines.length, functionLine - 1 + 20);
   const visibleLines = lines.slice(startLine, endLine);
-  const startLineNumber = startLine + 1; // для отображения (1-based)
+  const startLineNumber = startLine + 1; // for display (1-based)
 
   return (
     <div className="h-full bg-gray-50 flex flex-col">
       <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
         <div className="text-sm font-medium text-gray-700">
-          {functionData?.file || 'Исходный код'}
+          {functionData?.file || 'Source Code'}
         </div>
         {functionData?.line && (
           <div className="text-xs text-gray-500">
-            Строка {functionData.line}
+            Line {functionData.line}
           </div>
         )}
       </div>

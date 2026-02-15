@@ -14,7 +14,7 @@ export function FunctionDetails({ functionId }: FunctionDetailsProps) {
   if (isLoading) {
     return (
       <div className="w-80 flex-shrink-0 h-full p-4 bg-white border-r border-gray-200">
-        <div className="text-gray-500">Загрузка...</div>
+        <div className="text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export function FunctionDetails({ functionId }: FunctionDetailsProps) {
   if (!functionData) {
     return (
       <div className="w-80 flex-shrink-0 h-full p-4 bg-white border-r border-gray-200">
-        <div className="text-red-500">Функция не найдена</div>
+        <div className="text-red-500">Function not found</div>
       </div>
     );
   }
@@ -39,7 +39,7 @@ export function FunctionDetails({ functionId }: FunctionDetailsProps) {
       <div className="grid grid-cols-2 gap-4 mt-4">
         {functionData.cyclomatic_complexity !== null && (
           <div>
-            <div className="text-xs text-gray-500">Сложность</div>
+            <div className="text-xs text-gray-500">Complexity</div>
             <div className="text-lg font-semibold text-gray-800">
               {functionData.cyclomatic_complexity}
             </div>
@@ -73,7 +73,7 @@ export function FunctionDetails({ functionId }: FunctionDetailsProps) {
 
       {functionData.type_info && (
         <div className="mt-4">
-          <div className="text-xs text-gray-500">Тип</div>
+          <div className="text-xs text-gray-500">Type</div>
           <div className="text-sm text-gray-700 font-mono mt-1">
             {functionData.type_info}
           </div>

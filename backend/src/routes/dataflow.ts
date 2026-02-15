@@ -5,7 +5,7 @@ import type Database from 'better-sqlite3';
 
 const router = Router();
 
-// Ленивая инициализация prepared statements
+// Lazy initialization of prepared statements
 let variablesStmt: Database.Statement | null = null;
 
 function getVariablesStmt(): Database.Statement {
@@ -23,7 +23,7 @@ function getVariablesStmt(): Database.Statement {
 
 
 /**
- * Получить переменные функции (parameters, locals, results)
+ * Get function variables (parameters, locals, results)
  * GET /api/dataflow/:functionId/variables
  */
 router.get('/:functionId/variables', (req, res) => {
@@ -59,14 +59,14 @@ router.get('/:functionId/variables', (req, res) => {
     
     res.json(variables);
   } catch (error) {
-    console.error('Ошибка получения переменных:', error);
-    res.status(500).json({ error: 'Ошибка при получении переменных' });
+    console.error('Error fetching variables:', error);
+    res.status(500).json({ error: 'Error fetching variables' });
     return;
   }
 });
 
 /**
- * Получить backward slice (все узлы, которые влияют на данный узел через data flow)
+ * Get backward slice (all nodes that influence this node via data flow)
  * GET /api/dataflow/:nodeId/backward-slice?depth=20
  */
 router.get('/:nodeId/backward-slice', (req, res) => {
@@ -74,7 +74,7 @@ router.get('/:nodeId/backward-slice', (req, res) => {
     const nodeId = decodeURIComponent(req.params.nodeId);
     const depth = parseInt(req.query.depth as string || '20', 10);
     
-    // Используем параметризованный запрос для безопасности
+    // Use parameterized query for security
     const sql = `
       WITH RECURSIVE slice(id, depth) AS (
         SELECT ?, 0
@@ -98,7 +98,7 @@ router.get('/:nodeId/backward-slice', (req, res) => {
       parent_function: string | null;
       type_info: string | null;
       properties: string | null;
-    }>>(sql, [nodeId, depth]);
+    }>(sql, [nodeId, depth]);
     
     const nodes: Node[] = results.map(row => ({
       id: row.id,
@@ -114,10 +114,10 @@ router.get('/:nodeId/backward-slice', (req, res) => {
       properties: row.properties
     }));
     
-    // Получаем DFG рёбра между узлами среза для визуализации графа
+    // Get DFG edges between slice nodes for graph visualization
     if (nodes.length > 0) {
       const nodeIds = nodes.map(n => n.id);
-      // Используем параметризованный запрос для безопасности
+      // Use parameterized query for security
       const placeholders = nodeIds.map(() => '?').join(',');
       const edgesSql = `
         SELECT e.source, e.target, e.kind, e.properties
@@ -133,14 +133,14 @@ router.get('/:nodeId/backward-slice', (req, res) => {
       res.json({ nodes: [], edges: [] });
     }
   } catch (error) {
-    console.error('Ошибка получения backward slice:', error);
-    res.status(500).json({ error: 'Ошибка при получении backward slice' });
+    console.error('Error fetching backward slice:', error);
+    res.status(500).json({ error: 'Error fetching backward slice' });
     return;
   }
 });
 
 /**
- * Получить forward slice (все узлы, на которые влияет данный узел через data flow)
+ * Get forward slice (all nodes influenced by this node via data flow)
  * GET /api/dataflow/:nodeId/forward-slice?depth=20
  */
 router.get('/:nodeId/forward-slice', (req, res) => {
@@ -148,7 +148,7 @@ router.get('/:nodeId/forward-slice', (req, res) => {
     const nodeId = decodeURIComponent(req.params.nodeId);
     const depth = parseInt(req.query.depth as string || '20', 10);
     
-    // Используем параметризованный запрос для безопасности
+    // Use parameterized query for security
     const sql = `
       WITH RECURSIVE slice(id, depth) AS (
         SELECT ?, 0
@@ -172,7 +172,7 @@ router.get('/:nodeId/forward-slice', (req, res) => {
       parent_function: string | null;
       type_info: string | null;
       properties: string | null;
-    }>>(sql, [nodeId, depth]);
+    }>(sql, [nodeId, depth]);
     
     const nodes: Node[] = results.map(row => ({
       id: row.id,
@@ -188,10 +188,10 @@ router.get('/:nodeId/forward-slice', (req, res) => {
       properties: row.properties
     }));
     
-    // Получаем DFG рёбра между узлами среза для визуализации графа
+    // Get DFG edges between slice nodes for graph visualization
     if (nodes.length > 0) {
       const nodeIds = nodes.map(n => n.id);
-      // Используем параметризованный запрос для безопасности
+      // Use parameterized query for security
       const placeholders = nodeIds.map(() => '?').join(',');
       const edgesSql = `
         SELECT e.source, e.target, e.kind, e.properties
@@ -207,8 +207,8 @@ router.get('/:nodeId/forward-slice', (req, res) => {
       res.json({ nodes: [], edges: [] });
     }
   } catch (error) {
-    console.error('Ошибка получения forward slice:', error);
-    res.status(500).json({ error: 'Ошибка при получении forward slice' });
+    console.error('Error fetching forward slice:', error);
+    res.status(500).json({ error: 'Error fetching forward slice' });
     return;
   }
 });

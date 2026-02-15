@@ -6,6 +6,8 @@ import { GraphView } from './components/GraphView';
 import { SourcePanel } from './components/SourcePanel';
 import { FunctionDetails } from './components/FunctionDetails';
 import { DataFlowPanel } from './components/DataFlowPanel';
+import { PackageMapView } from './components/PackageMapView';
+import { PackageInfoPanel } from './components/PackageInfoPanel';
 import { useStats, useBackwardSlice, useForwardSlice, useVariables } from './hooks/useApi';
 
 const queryClient = new QueryClient({
@@ -13,7 +15,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000 // 5 минут
+      staleTime: 5 * 60 * 1000 // 5 minutes
     }
   }
 });
@@ -21,27 +23,28 @@ const queryClient = new QueryClient({
 function AppContent() {
   const [selectedFunctionId, setSelectedFunctionId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [mode, setMode] = useState<'call-graph' | 'data-flow'>('call-graph');
+  const [mode, setMode] = useState<'call-graph' | 'data-flow' | 'package-map'>('call-graph');
   const [selectedVariableId, setSelectedVariableId] = useState<string | null>(null);
   const [sliceDirection, setSliceDirection] = useState<'backward' | 'forward'>('backward');
-  const [sidebarWidth, setSidebarWidth] = useState(256); // Начальная ширина 256px (w-64)
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(256); // Initial width 256px (w-64)
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [bottomPanelHeight, setBottomPanelHeight] = useState(256); // Начальная высота 256px
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(256); // Initial height 256px
   const [isBottomPanelCollapsed, setIsBottomPanelCollapsed] = useState(false);
   const [isResizingBottom, setIsResizingBottom] = useState(false);
   const resizeStartRef = useRef<{ y: number; height: number } | null>(null);
   const { data: stats } = useStats();
 
-  // Получаем переменные для выбранной функции
+  // Get variables for selected function
   const { data: variables } = useVariables(mode === 'data-flow' ? selectedFunctionId : null);
   
-  // Получаем выбранную переменную
+  // Get selected variable
   const selectedVariable = useMemo(() => {
     return variables?.find(v => v.id === selectedVariableId) || null;
   }, [variables, selectedVariableId]);
 
-  // Получаем slice в зависимости от направления
+  // Get slice based on direction
   const { data: backwardSlice } = useBackwardSlice(
     mode === 'data-flow' && selectedVariableId && sliceDirection === 'backward' ? selectedVariableId : null
   );
@@ -51,7 +54,7 @@ function AppContent() {
 
   const currentSlice = sliceDirection === 'backward' ? backwardSlice : forwardSlice;
 
-  // Вычисляем подсвеченные строки из slice
+  // Calculate highlighted lines from slice
   const highlightedLines = useMemo(() => {
     const lines = new Set<number>();
     if (currentSlice?.nodes) {
@@ -75,13 +78,27 @@ function AppContent() {
     setSliceDirection(direction);
   };
 
-  const handleModeChange = (newMode: 'call-graph' | 'data-flow') => {
+  const handleModeChange = (newMode: 'call-graph' | 'data-flow' | 'package-map') => {
     setMode(newMode);
     setSelectedVariableId(null);
     setSelectedNodeId(null);
+    if (newMode !== 'package-map') {
+      setSelectedPackage(null);
+    }
   };
 
-  // Обработчики для изменения размера sidebar
+  const handleSelectPackage = (packageName: string) => {
+    setSelectedPackage(packageName);
+  };
+
+  const handleSelectFunctionFromPackage = (functionId: string) => {
+    // Switch to call-graph mode and select function
+    setMode('call-graph');
+    handleSelectFunction(functionId);
+    setSelectedPackage(null);
+  };
+
+  // Handlers for sidebar resizing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -92,7 +109,7 @@ function AppContent() {
       if (!isResizing) return;
       
       const newWidth = e.clientX;
-      // Ограничиваем ширину: минимум 200px, максимум 800px
+      // Limit width: minimum 200px, maximum 800px
       const clampedWidth = Math.max(200, Math.min(800, newWidth));
       setSidebarWidth(clampedWidth);
     };
@@ -116,7 +133,7 @@ function AppContent() {
     };
   }, [isResizing]);
 
-  // Обработчики для изменения размера нижней панели
+  // Handlers for bottom panel resizing
   const handleBottomPanelMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     resizeStartRef.current = {
@@ -130,10 +147,10 @@ function AppContent() {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizingBottom || !resizeStartRef.current) return;
       
-      // Вычисляем изменение высоты относительно начальной позиции
-      const deltaY = resizeStartRef.current.y - e.clientY; // Положительное значение = мышь вверх = увеличиваем высоту
+      // Calculate height change relative to initial position
+      const deltaY = resizeStartRef.current.y - e.clientY; // Positive value = mouse up = increase height
       const newHeight = resizeStartRef.current.height + deltaY;
-      // Ограничиваем высоту: минимум 100px, максимум 600px
+      // Limit height: minimum 100px, maximum 600px
       const clampedHeight = Math.max(100, Math.min(600, newHeight));
       setBottomPanelHeight(clampedHeight);
     };
@@ -165,15 +182,15 @@ function AppContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">CPG Code Explorer</h1>
-            <p className="text-sm text-gray-600">Исследование кодовой базы через Call Graph</p>
+            <p className="text-sm text-gray-600">Explore codebase through Call Graph</p>
           </div>
           <div className="flex-1 mx-8">
             <SearchBar onSelectFunction={handleSelectFunction} />
           </div>
           {stats && (
             <div className="text-right text-sm text-gray-600">
-              <div>Узлов: {stats.total_nodes.toLocaleString()}</div>
-              <div>Рёбер: {stats.total_edges.toLocaleString()}</div>
+              <div>Nodes: {stats.total_nodes.toLocaleString()}</div>
+              <div>Edges: {stats.total_edges.toLocaleString()}</div>
             </div>
           )}
         </div>
@@ -181,7 +198,7 @@ function AppContent() {
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar с возможностью изменения размера */}
+        {/* Sidebar with resizing capability */}
         <div ref={sidebarRef} style={{ width: `${sidebarWidth}px` }} className="flex-shrink-0 relative">
           {mode === 'call-graph' && (
             <Sidebar onSelectFunction={handleSelectFunction} />
@@ -192,7 +209,13 @@ function AppContent() {
               onSelectVariable={handleSelectVariable}
             />
           )}
-          {/* Drag handle для изменения размера */}
+          {mode === 'package-map' && (
+            <PackageInfoPanel
+              packageName={selectedPackage}
+              onSelectFunction={handleSelectFunctionFromPackage}
+            />
+          )}
+          {/* Drag handle for resizing */}
           <div
             onMouseDown={handleMouseDown}
             className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-400 transition-colors ${
@@ -204,7 +227,7 @@ function AppContent() {
 
         {/* Graph and source */}
         <div className="flex-1 flex flex-col">
-          {/* Tabs для переключения режимов */}
+          {/* Tabs for mode switching */}
           <div className="bg-white border-b border-gray-200 px-4">
             <div className="flex gap-2">
               <button
@@ -215,7 +238,7 @@ function AppContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Граф вызовов
+                Call Graph
               </button>
               <button
                 onClick={() => handleModeChange('data-flow')}
@@ -225,23 +248,41 @@ function AppContent() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Поток данных
+                Data Flow
+              </button>
+              <button
+                onClick={() => handleModeChange('package-map')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  mode === 'package-map'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Package Architecture
               </button>
             </div>
           </div>
 
-          <GraphView
-            selectedFunctionId={selectedFunctionId}
-            onNodeSelect={setSelectedNodeId}
-            mode={mode}
-            dataFlowSlice={
-              mode === 'data-flow' && selectedVariable && currentSlice
-                ? { originNode: selectedVariable, slice: currentSlice }
-                : null
-            }
-          />
+          {mode === 'package-map' ? (
+            <PackageMapView
+              selectedPackage={selectedPackage}
+              onPackageSelect={handleSelectPackage}
+            />
+          ) : (
+            <GraphView
+              selectedFunctionId={selectedFunctionId}
+              onNodeSelect={setSelectedNodeId}
+              onNodeNavigate={handleSelectFunction}
+              mode={mode}
+              dataFlowSlice={
+                mode === 'data-flow' && selectedVariable && currentSlice
+                  ? { originNode: selectedVariable, slice: currentSlice }
+                  : null
+              }
+            />
+          )}
           
-          {/* Drag handle для изменения размера нижней панели */}
+          {/* Drag handle for bottom panel resizing */}
           <div className="relative border-t border-gray-200 bg-gray-100">
             <div
               onMouseDown={handleBottomPanelMouseDown}
@@ -249,17 +290,17 @@ function AppContent() {
                 isResizingBottom ? 'bg-blue-500' : 'bg-transparent'
               }`}
             />
-            {/* Кнопка сворачивания/разворачивания */}
+            {/* Collapse/expand button */}
             <button
               onClick={() => setIsBottomPanelCollapsed(!isBottomPanelCollapsed)}
               className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
-              title={isBottomPanelCollapsed ? 'Развернуть' : 'Свернуть'}
+              title={isBottomPanelCollapsed ? 'Expand' : 'Collapse'}
             >
               {isBottomPanelCollapsed ? '▲' : '▼'}
             </button>
           </div>
           
-          {/* Нижняя секция: FunctionDetails слева, SourcePanel справа */}
+          {/* Bottom section: FunctionDetails on left, SourcePanel on right */}
           {!isBottomPanelCollapsed && (
             <div 
               className="flex border-t border-gray-200"

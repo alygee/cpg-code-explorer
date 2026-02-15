@@ -1,237 +1,236 @@
-# Инструкция по запуску в Docker
+# Docker Setup Instructions
 
-## Предварительные требования
+## Prerequisites
 
-1. **Docker** версии 20.10 или выше
-2. **Docker Compose** версии 2.0 или выше
-3. **База данных CPG** (`data/cpg.db`) - см. [SETUP_DB.md](./SETUP_DB.md)
+1. **Docker** version 20.10 or higher
+2. **Docker Compose** version 2.0 or higher
+3. **CPG Database** (`data/cpg.db`) - see [SETUP_DB.md](./SETUP_DB.md)
 
-## Проверка установки Docker
+## Docker Installation Check
 
 ```bash
-# Проверка версии Docker
+# Check Docker version
 docker --version
 
-# Проверка версии Docker Compose
+# Check Docker Compose version
 docker compose version
 ```
 
-## Шаг 1: Подготовка базы данных
+## Step 1: Database Preparation
 
-Убедитесь, что база данных CPG сгенерирована и находится в папке `data/`:
+Make sure the CPG database is generated and located in the `data/` folder:
 
 ```bash
-# Проверка наличия файла
+# Check file exists
 ls -lh data/cpg.db
 
-# Если файла нет, следуйте инструкциям в SETUP_DB.md
+# If file doesn't exist, follow instructions in SETUP_DB.md
 ```
 
-**Важно:** Файл `cpg.db` должен быть размером примерно 900 MB. Если файл отсутствует или слишком маленький, приложение не запустится.
+**Important:** The `cpg.db` file should be approximately 900 MB in size. If the file is missing or too small, the application will not start.
 
-## Шаг 2: Запуск приложения
+## Step 2: Starting the Application
 
-### Вариант 1: Запуск в фоновом режиме (рекомендуется)
+### Option 1: Run in Background (Recommended)
 
 ```bash
 docker compose up -d
 ```
 
-### Вариант 2: Запуск с выводом логов
+### Option 2: Run with Logs
 
 ```bash
 docker compose up
 ```
 
-Этот вариант полезен для отладки - вы увидите все логи в реальном времени.
+This option is useful for debugging - you'll see all logs in real-time.
 
-## Шаг 3: Проверка работы
+## Step 3: Verification
 
-После запуска проверьте:
+After starting, check:
 
-1. **Статус контейнеров:**
+1. **Container status:**
    ```bash
    docker compose ps
    ```
    
-   Оба сервиса (`backend` и `frontend`) должны быть в статусе `Up`.
+   Both services (`backend` and `frontend`) should be in `Up` status.
 
-2. **Health check backend:**
+2. **Backend health check:**
    ```bash
    curl http://localhost:3001/health
    ```
    
-   Должен вернуть: `{"status":"ok","timestamp":"..."}`
+   Should return: `{"status":"ok","timestamp":"..."}`
 
-3. **Откройте в браузере:**
+3. **Open in browser:**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:3001/api/stats
 
-## Управление контейнерами
+## Container Management
 
-### Остановка
+### Stopping
 
 ```bash
-# Остановить контейнеры (сохраняет данные)
+# Stop containers (preserves data)
 docker compose stop
 
-# Остановить и удалить контейнеры
+# Stop and remove containers
 docker compose down
 ```
 
-### Перезапуск
+### Restarting
 
 ```bash
-# Перезапустить все сервисы
+# Restart all services
 docker compose restart
 
-# Перезапустить только backend
+# Restart backend only
 docker compose restart backend
 
-# Перезапустить только frontend
+# Restart frontend only
 docker compose restart frontend
 ```
 
-### Просмотр логов
+### Viewing Logs
 
 ```bash
-# Все логи
+# All logs
 docker compose logs -f
 
-# Только backend
+# Backend only
 docker compose logs -f backend
 
-# Только frontend
+# Frontend only
 docker compose logs -f frontend
 
-# Последние 100 строк
+# Last 100 lines
 docker compose logs --tail=100
 ```
 
-### Пересборка образов
+### Rebuilding Images
 
-Если вы внесли изменения в код:
+If you made code changes:
 
 ```bash
-# Пересобрать и запустить
+# Rebuild and run
 docker compose up --build
 
-# Пересобрать без кэша
+# Rebuild without cache
 docker compose build --no-cache
 ```
 
-## Решение проблем
+## Troubleshooting
 
-### Проблема: Backend не запускается
+### Issue: Backend Won't Start
 
-**Проверьте:**
-1. Наличие файла `data/cpg.db`
-2. Логи: `docker compose logs backend`
-3. Права доступа к файлу базы данных
+**Check:**
+1. Presence of `data/cpg.db` file
+2. Logs: `docker compose logs backend`
+3. Database file permissions
 
-**Решение:**
+**Solution:**
 ```bash
-# Проверить логи
+# Check logs
 docker compose logs backend
 
-# Проверить наличие базы
+# Check database exists
 ls -lh data/cpg.db
 
-# Если базы нет, сгенерируйте её (см. SETUP_DB.md)
+# If database doesn't exist, generate it (see SETUP_DB.md)
 ```
 
-### Проблема: Frontend не подключается к backend
+### Issue: Frontend Can't Connect to Backend
 
-**Проверьте:**
-1. Backend запущен: `docker compose ps`
-2. Health check работает: `curl http://localhost:3001/health`
-3. Логи frontend: `docker compose logs frontend`
+**Check:**
+1. Backend is running: `docker compose ps`
+2. Health check works: `curl http://localhost:3001/health`
+3. Frontend logs: `docker compose logs frontend`
 
-**Решение:**
+**Solution:**
 ```bash
-# Перезапустить оба сервиса
+# Restart both services
 docker compose restart
 
-# Проверить переменные окружения
+# Check environment variables
 docker compose config
 ```
 
-### Проблема: Порты заняты
+### Issue: Ports Already in Use
 
-Если порты 3000 или 3001 уже заняты, измените их в `docker-compose.yml`:
+If ports 3000 or 3001 are already in use, change them in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "3002:3001"  # Вместо 3001:3001
+  - "3002:3001"  # Instead of 3001:3001
 ```
 
-### Проблема: Медленная работа
+### Issue: Slow Performance
 
-**Оптимизация:**
-1. Убедитесь, что база данных на SSD
-2. Увеличьте память для Docker (Settings → Resources → Memory)
-3. Проверьте, что база данных не повреждена
+**Optimization:**
+1. Make sure database is on SSD
+2. Increase Docker memory (Settings → Resources → Memory)
+3. Check that database is not corrupted
 
-## Очистка
+## Cleanup
 
-### Удалить контейнеры и volumes
+### Remove Containers and Volumes
 
 ```bash
-# Остановить и удалить контейнеры, volumes, сети
+# Stop and remove containers, volumes, networks
 docker compose down -v
 ```
 
-### Удалить образы
+### Remove Images
 
 ```bash
-# Удалить образы проекта
+# Remove project images
 docker compose down --rmi all
 ```
 
-### Полная очистка (осторожно!)
+### Full Cleanup (Caution!)
 
 ```bash
-# Удалить все неиспользуемые ресурсы Docker
+# Remove all unused Docker resources
 docker system prune -a --volumes
 ```
 
-## Структура в Docker
+## Structure in Docker
 
 ```
 cpg-explorer/
-├── backend/              # Собирается в образ backend
-│   └── src/              # → /app/src в контейнере
-├── frontend/             # Собирается в образ frontend
-│   └── src/              # → /app/src в контейнере
-├── data/                 # Монтируется как volume
+├── backend/              # Built into backend image
+│   └── src/              # → /app/src in container
+├── frontend/             # Built into frontend image
+│   └── src/              # → /app/src in container
+├── data/                 # Mounted as volume
 │   └── cpg.db            # → /app/data/cpg.db (read-only)
-└── docker-compose.yml    # Конфигурация
+└── docker-compose.yml    # Configuration
 ```
 
-## Переменные окружения
+## Environment Variables
 
 ### Backend
 
-- `PORT` - Порт сервера (по умолчанию: 3001)
-- `DB_PATH` - Путь к базе данных (по умолчанию: /app/data/cpg.db)
+- `PORT` - Server port (default: 3001)
+- `DB_PATH` - Database path (default: /app/data/cpg.db)
 
 ### Frontend
 
-- `VITE_API_URL` - URL API бэкенда (устанавливается при сборке)
+- `VITE_API_URL` - Backend API URL (set at build time)
 
-## Производственное развёртывание
+## Production Deployment
 
-Для production рекомендуется:
+For production, it's recommended to:
 
-1. Использовать `.env` файл для конфигурации
-2. Настроить reverse proxy (nginx)
-3. Использовать HTTPS
-4. Настроить мониторинг и логирование
+1. Use `.env` file for configuration
+2. Set up reverse proxy (nginx)
+3. Use HTTPS
+4. Configure monitoring and logging
 
-Пример `.env`:
+Example `.env`:
 ```env
 PORT=3001
 DB_PATH=/app/data/cpg.db
 VITE_API_URL=https://api.example.com/api
 ```
-

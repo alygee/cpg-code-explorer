@@ -4,10 +4,10 @@ import { queryOne } from '../db';
 const router = Router();
 
 /**
- * Получить исходный код файла
+ * Get source code of a file
  * GET /api/sources/:file
  * 
- * Параметр :file должен быть закодирован (encodeURIComponent)
+ * The :file parameter should be encoded (encodeURIComponent)
  */
 router.get('/:file', (req, res) => {
   try {
@@ -17,7 +17,7 @@ router.get('/:file', (req, res) => {
     const result = queryOne<{ content: string; package: string | null }>(sql, [filePath]);
     
     if (!result) {
-      return res.status(404).json({ error: 'Файл не найден' });
+      return res.status(404).json({ error: 'File not found' });
     }
     
     return res.json({
@@ -26,8 +26,8 @@ router.get('/:file', (req, res) => {
       package: result.package
     });
   } catch (error) {
-    console.error('Ошибка получения исходного кода:', error);
-    return res.status(500).json({ error: 'Ошибка при получении исходного кода' });
+    console.error('Error fetching source code:', error);
+    return res.status(500).json({ error: 'Error fetching source code' });
   }
 });
 
