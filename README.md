@@ -15,7 +15,7 @@
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Node.js + Express + TypeScript
 - **База данных**: SQLite (better-sqlite3)
-- **Визуализация графа**: Cytoscape.js + dagre layout
+- **Визуализация графа**: reactflow
 - **Стили**: Tailwind CSS
 
 ## Требования
@@ -123,7 +123,7 @@ Frontend запустится на порту 3000.
 
 - `SearchBar` - Поиск функций
 - `Sidebar` - Навигация по пакетам
-- `GraphView` - Визуализация графа вызовов (Cytoscape.js)
+- `GraphView` - Визуализация графа вызовов (react flow)
 - `SourcePanel` - Просмотр исходного кода
 - `FunctionDetails` - Детали функции с метриками
 
